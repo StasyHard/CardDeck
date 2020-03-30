@@ -8,7 +8,7 @@
 
 import Foundation
 
-struct PlayingCard: CustomStringConvertible {
+struct Card: CustomStringConvertible {
     var suit: Suit
     var rank: Rank
     
