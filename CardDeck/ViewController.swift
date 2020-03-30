@@ -36,10 +36,17 @@ class ViewController: UIViewController {
         return cardViews.filter { $0.isFaceUp && !$0.isHidden }
     }
     
+    private var faseUpCardViewsMatch: Bool {
+        return  faseUpCardViews.count == 2 &&
+            faseUpCardViews[0].rank == faseUpCardViews[1].rank &&
+            faseUpCardViews[0].suit == faseUpCardViews[1].suit
+    }
+    
     @objc func flipCard(_ recognizer: UITapGestureRecognizer) {
         switch recognizer.state {
         case .ended:
             if let chousenCardView = recognizer.view as? CardView {
+                //Анимация переворота карты
                 UIView.transition(with: chousenCardView,
                                   duration: 0.6,
                                   options: [.transitionFlipFromLeft],
@@ -47,13 +54,45 @@ class ViewController: UIViewController {
                                     chousenCardView.isFaceUp = !chousenCardView.isFaceUp
                 },
                                   completion: { finished in
-                                    if self.faseUpCardViews.count == 2 {
+                                    //если карты совпали увеличиваем карты, потом уменьшаем и они пропадают
+                                    if self.faseUpCardViewsMatch {
+                                        UIViewPropertyAnimator.runningPropertyAnimator(
+                                            withDuration: 0.6,
+                                            delay: 0,
+                                            options: [],
+                                            animations: {
+                                                self.faseUpCardViews.forEach {
+                                                    $0.transform = CGAffineTransform.identity.scaledBy(x: 3.0, y: 3.0)
+                                                }
+                                        }) //completion
+                                        { position in
+                                            UIViewPropertyAnimator.runningPropertyAnimator(
+                                                withDuration: 0.75,
+                                                delay: 0,
+                                                options: [],
+                                                animations: {
+                                                    self.faseUpCardViews.forEach {
+                                                        $0.transform = CGAffineTransform.identity.scaledBy(x: 0.1, y: 0.1)
+                                                        $0.alpha = 0
+                                                    }
+                                            }) //completion
+                                            { position in
+                                                self.faseUpCardViews.forEach {
+                                                    $0.isHidden = true
+                                                    $0.alpha = 1
+                                                    $0.transform = .identity
+                                                }
+                                            }
+                                        }
+                                    } //если карты две и не совпали, переворачиваем обратно лицом вниз
+                                    else if self.faseUpCardViews.count == 2 {
                                         self.faseUpCardViews.forEach { cardView in
-                                            UIView.transition(with: cardView,
-                                                              duration: 0.6,
-                                                              options: [.transitionFlipFromLeft],
-                                                              animations: {
-                                                                cardView.isFaceUp = false
+                                            UIView.transition(
+                                                with: cardView,
+                                                duration: 0.6,
+                                                options: [.transitionFlipFromLeft],
+                                                animations: {
+                                                    cardView.isFaceUp = false
                                             })
                                         }
                                     }
